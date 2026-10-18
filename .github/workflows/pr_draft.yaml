@@ -3,14 +3,17 @@ on:
   pull_request_review:
     types: [submitted]
 
+concurrency:
+  group: unraid-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   redraft:
     # TODO: doesn't work due to perms issue. https://github.com/commaai/opendbc/actions/runs/16079182504/job/45380739128?pr=2385
-    if: false
-    #if: github.event.review.state == 'changes_requested'
+    if: ${{ (github.event.pull_request.draft != true) && (false) }}
     permissions:
       pull-requests: write
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request_target' && github.event_name != 'issue_comment' && github.event_name != 'pull_request_review' && (!github.event.pull_request.head.repo.full_name || github.event.pull_request.head.repo.full_name == github.repository)) && fromJSON('["self-hosted", "Linux", "X64", "roadie", "unraid"]') || fromJSON('["ubuntu-24.04"]') }}
     steps:
     - uses: actions/checkout@v4
     - run: gh pr ready --undo "${{ github.event.pull_request.number }}"

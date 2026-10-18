@@ -4,10 +4,15 @@ on:
     types: [published]
   workflow_dispatch:
 
+concurrency:
+  group: unraid-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pypi-publish:
+    if: ${{ github.event.pull_request.draft != true }}
     name: Upload release to PyPI
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request_target' && github.event_name != 'issue_comment' && github.event_name != 'pull_request_review' && (!github.event.pull_request.head.repo.full_name || github.event.pull_request.head.repo.full_name == github.repository)) && fromJSON('["self-hosted", "Linux", "X64", "roadie", "unraid"]') || fromJSON('["ubuntu-24.04"]') }}
     environment:
       name: pypi
       url: https://pypi.org/p/opendbc

@@ -1,15 +1,20 @@
 name: "PR review"
 on:
   pull_request_target:
-    types: [opened, reopened, synchronize, edited, edited]
+    types: [opened, reopened, synchronize, edited, ready_for_review, converted_to_draft]
+
+concurrency:
+  group: unraid-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   labeler:
+    if: ${{ github.event.pull_request.draft != true }}
     name: review
     permissions:
       contents: read
       pull-requests: write
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request_target' && github.event_name != 'issue_comment' && github.event_name != 'pull_request_review' && (!github.event.pull_request.head.repo.full_name || github.event.pull_request.head.repo.full_name == github.repository)) && fromJSON('["self-hosted", "Linux", "X64", "roadie", "unraid"]') || fromJSON('["ubuntu-24.04"]') }}
     steps:
     - uses: actions/checkout@v4
 
